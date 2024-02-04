@@ -21,7 +21,7 @@ public class CustomerServiceImpl implements CustomerService {
   @Override
   public void createCustomer(CustomerCreateRequestDTO createRequestDTO) {
     customerValidator.validateCreateRequest(createRequestDTO);
-    
+
     var customer = customerMapper.toEntity(createRequestDTO);
     customerRepository.save(customer);
   }
@@ -29,11 +29,9 @@ public class CustomerServiceImpl implements CustomerService {
   @Override
   public void updateCustomer(Long id, CustomerUpdateRequestDTO updateRequestDTO) {
     customerValidator.validateUpdateRequest(id, updateRequestDTO);
-    
-    var customer = customerRepository
-        .findById(id)
-        .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
-    
+
+    var customer = findCustomer(id);
+
     customer = customerMapper.update(customer, updateRequestDTO);
     customerRepository.save(customer);
   }
@@ -41,26 +39,28 @@ public class CustomerServiceImpl implements CustomerService {
   @Override
   public Page<CustomerResponseDTO> getCustomers(Pageable pageable) {
     return customerRepository
-        .findAll(pageable)
+        .findAllByDeletedAtIsNull(pageable)
         .map(customerMapper::toResponseDTO);
   }
 
   @Override
   public CustomerDetailsResponseDTO getCustomer(Long id) {
-    return customerRepository
-        .findById(id)
-        .map(customerMapper::toDetailsResponseDTO)
-        .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
+    var customer = findCustomer(id);
+    return customerMapper.toDetailsResponseDTO(customer);
   }
-  
+
   @Override
   public void deleteCustomer(Long id) {
-    var customer = customerRepository
-        .findById(id)
-        .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
-    
+    var customer = findCustomer(id);
+
     customer.setDeletedAt(LocalDateTime.now());
     customerRepository.save(customer);
+  }
+
+  private CustomerEntity findCustomer(Long id) {
+    return customerRepository
+        .findByIdAndDeletedAtIsNull(id)
+        .orElseThrow(() -> new RuntimeException("Customer not found: " + id));
   }
 
 }

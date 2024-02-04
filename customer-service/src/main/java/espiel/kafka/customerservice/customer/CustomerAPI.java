@@ -27,7 +27,8 @@ public interface CustomerAPI {
    */
   @PostMapping
   ResponseEntity<Void> createCustomer(
-      @Valid @RequestBody CustomerCreateRequestDTO createRequestDTO);
+      @Valid @RequestBody CustomerCreateRequestDTO createRequestDTO
+  );
 
   /**
    * Updates the customer with the given id.
@@ -36,7 +37,7 @@ public interface CustomerAPI {
    * @param updateRequestDTO the customer data to update.
    * @return ResponseEntity with the status of the operation.
    */
-  @PatchMapping("/{id}")
+  @PatchMapping("{id}")
   ResponseEntity<Void> updateCustomer(
       @PathVariable Long id,
       @Valid @RequestBody CustomerUpdateRequestDTO updateRequestDTO
@@ -57,7 +58,7 @@ public interface CustomerAPI {
    * @param id the customer id to return.
    * @return ResponseEntity with the customer data.
    */
-  @GetMapping("/{id}")
+  @GetMapping("{id}")
   ResponseEntity<CustomerDetailsResponseDTO> getCustomer(@PathVariable Long id);
 
   /**
@@ -66,7 +67,7 @@ public interface CustomerAPI {
    * @param id the customer id to delete.
    * @return ResponseEntity with the status of the operation.
    */
-  @DeleteMapping("/{id}")
+  @DeleteMapping("{id}")
   ResponseEntity<Void> deleteCustomer(@PathVariable Long id);
 
 }

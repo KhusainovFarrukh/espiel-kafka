@@ -21,6 +21,8 @@ public interface CustomerMapper {
   CustomerDetailsResponseDTO toDetailsResponseDTO(CustomerEntity entity);
 
   @BeanMapping(nullValuePropertyMappingStrategy = IGNORE)
-  CustomerEntity update(@MappingTarget CustomerEntity entity, CustomerUpdateRequestDTO updateRequestDTO);
+  CustomerEntity update(
+      @MappingTarget CustomerEntity entity, CustomerUpdateRequestDTO updateRequestDTO
+  );
 
 }
