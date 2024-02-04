@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  customer-service-db:
+    container_name: customer-service-db
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: customer_service_db
+    ports:
+      - 5434:5432
+    networks:
+      - espiel-kafka-microservices
+
+  order-service-db:
+    container_name: order-service-db
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: order_service_db
+    ports:
+      - 5435:5432
+    networks:
+      - espiel-kafka-microservices
+
+  customer-service:
+    container_name: customer-service
+    depends_on:
+      - customer-service-db
+    build:
+      context: ./customer-service
+      dockerfile: Dockerfile
+    ports:
+      - 5001:5001
+    environment:
+      DB_IP: customer-service-db
+      DB_PORT: 5432
+      DB_NAME: customer_service_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DRIVER: org.postgresql.Driver
+    networks:
+      - espiel-kafka-microservices
+
+  order-service:
+    container_name: order-service
+    depends_on:
+      - order-service-db
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - 5002:5002
+    environment:
+      DB_IP: order-service-db
+      DB_PORT: 5432
+      DB_NAME: order_service_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DRIVER: org.postgresql.Driver
+    networks:
+      - espiel-kafka-microservices
+
+networks:
+  espiel-kafka-microservices:
