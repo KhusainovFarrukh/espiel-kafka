@@ -18,6 +18,7 @@ spring:
     change-log: liquibase/main.xml
     enabled: true
   kafka:
+    bootstrap-servers: ${KAFKA_IP:localhost}:${KAFKA_PORT:5092}
     producer:
       bootstrap-servers: ${KAFKA_IP:localhost}:${KAFKA_PORT:5092}
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
