@@ -19,11 +19,9 @@ spring:
     enabled: true
   kafka:
     bootstrap-servers: ${KAFKA_IP:localhost}:${KAFKA_PORT:5092}
-    producer:
+
+kafka:
+  producer:
+    active-orders-count:
       bootstrap-servers: ${KAFKA_IP:localhost}:${KAFKA_PORT:5092}
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring:
-          json:
-            type.mapping: "activeOrdersCount:espiel.kafka.orderservice.kafka.producer.order.model.ActiveOrdersCountMessage"
+      topic: active-orders-count
