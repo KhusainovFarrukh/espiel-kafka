@@ -45,6 +45,10 @@ dependencies {
 
 	//Liquibase
 	implementation 'org.liquibase:liquibase-core'
+
+	//Kafka
+	implementation 'org.springframework.kafka:spring-kafka'
+
 }
 
 tasks.named('test') {
