@@ -1,5 +1,6 @@
 package espiel.kafka.orderservice.order;
 
+import espiel.kafka.orderservice.kafka.producer.order.OrderProducer;
 import espiel.kafka.orderservice.order.model.OrderCreateRequestDTO;
 import espiel.kafka.orderservice.order.model.OrderDetailsResponseDTO;
 import espiel.kafka.orderservice.order.model.OrderResponseDTO;
@@ -19,6 +20,7 @@ public class OrderServiceImpl implements OrderService {
   private final OrderRepository orderRepository;
   private final OrderMapper orderMapper;
   private final OrderValidator orderValidator;
+  private final OrderProducer orderProducer;
 
   private final Random random = new Random();
 
@@ -34,6 +36,7 @@ public class OrderServiceImpl implements OrderService {
     order.setTotal(BigDecimal.valueOf(random.nextDouble()));
 
     orderRepository.save(order);
+    orderProducer.sendOnCreate(order.getCustomerId());
   }
 
   @Override
@@ -41,6 +44,12 @@ public class OrderServiceImpl implements OrderService {
     orderValidator.validateUpdateRequest(id, updateRequestDTO);
 
     var order = findOrder(id);
+
+    orderProducer.sendOnUpdate(
+        order.getCustomerId(),
+        order.getStatus(),
+        updateRequestDTO.status()
+    );
 
     order = orderMapper.update(order, updateRequestDTO);
     orderRepository.save(order);
