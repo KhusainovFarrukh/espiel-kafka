@@ -1,0 +1,1 @@
+opt/bitnami/kafka/bin/kafka-topics.sh --create --topic active-orders-count --bootstrap-server kafka:5093
