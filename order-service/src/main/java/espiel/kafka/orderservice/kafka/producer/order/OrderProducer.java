@@ -4,6 +4,7 @@ import espiel.kafka.orderservice.kafka.producer.order.model.ActiveOrdersCountMes
 import espiel.kafka.orderservice.order.OrderStatus;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -11,13 +12,14 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class OrderProducer {
 
-  public static final String TOPIC_ACTIVE_ORDERS_COUNT = "active-orders-count";
+  @Value("${kafka.producer.active-orders-count.topic}")
+  private String topicActiveOrdersCount;
 
   private final KafkaTemplate<String, ActiveOrdersCountMessage> kafkaTemplate;
 
   public void sendOnCreate(Long customerId) {
     kafkaTemplate.send(
-        TOPIC_ACTIVE_ORDERS_COUNT,
+        topicActiveOrdersCount,
         new ActiveOrdersCountMessage(customerId, 1L)
     );
   }
@@ -34,7 +36,7 @@ public class OrderProducer {
             activeOrdersCount = -1L;
           }
           kafkaTemplate.send(
-              TOPIC_ACTIVE_ORDERS_COUNT,
+              topicActiveOrdersCount,
               new ActiveOrdersCountMessage(customerId, activeOrdersCount)
           );
         });
