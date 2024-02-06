@@ -4,6 +4,7 @@ import espiel.kafka.customerservice.customer.model.CustomerCreateRequestDTO;
 import espiel.kafka.customerservice.customer.model.CustomerDetailsResponseDTO;
 import espiel.kafka.customerservice.customer.model.CustomerResponseDTO;
 import espiel.kafka.customerservice.customer.model.CustomerUpdateRequestDTO;
+import espiel.kafka.customerservice.kafka.consumer.orderscount.model.ActiveOrdersCountMessage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -18,5 +19,7 @@ public interface CustomerService {
   CustomerDetailsResponseDTO getCustomer(Long id);
 
   void deleteCustomer(Long id);
+
+  void updateActiveOrdersCount(ActiveOrdersCountMessage message);
 
 }

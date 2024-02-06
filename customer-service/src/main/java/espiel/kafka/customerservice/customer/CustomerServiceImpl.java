@@ -4,6 +4,7 @@ import espiel.kafka.customerservice.customer.model.CustomerCreateRequestDTO;
 import espiel.kafka.customerservice.customer.model.CustomerDetailsResponseDTO;
 import espiel.kafka.customerservice.customer.model.CustomerResponseDTO;
 import espiel.kafka.customerservice.customer.model.CustomerUpdateRequestDTO;
+import espiel.kafka.customerservice.kafka.consumer.orderscount.model.ActiveOrdersCountMessage;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -54,6 +55,15 @@ public class CustomerServiceImpl implements CustomerService {
     var customer = findCustomer(id);
 
     customer.setDeletedAt(LocalDateTime.now());
+    customerRepository.save(customer);
+  }
+
+  @Override
+  public void updateActiveOrdersCount(ActiveOrdersCountMessage message) {
+    var customer = findCustomer(message.customerId());
+    customer.setActiveOrdersCount(
+        customer.getActiveOrdersCount() + message.newOrdersCount().intValue()
+    );
     customerRepository.save(customer);
   }
 
