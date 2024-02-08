@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd"
+  objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+
+  <changeSet id="1707414077963-1" author="farrukh_kh">
+    <createSequence incrementBy="50" sequenceName="sent_messages_seq" startValue="1"/>
+    <createTable tableName="sent_messages">
+        <column name="id" type="BIGINT">
+            <constraints nullable="false" primaryKey="true" primaryKeyName="pk_sent_messages"/>
+        </column>
+        <column name="topic" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="timestamp" type="DATETIME">
+            <constraints nullable="false"/>
+        </column>
+        <column name="kafka_offset" type="BIGINT">
+            <constraints nullable="false"/>
+        </column>
+        <column name="partition" type="INT">
+            <constraints nullable="false"/>
+        </column>
+        <column name="message" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+        <column name="created_at" type="DATETIME">
+            <constraints nullable="false"/>
+        </column>
+        <column name="updated_at" type="DATETIME">
+            <constraints nullable="false"/>
+        </column>
+    </createTable>
+  </changeSet>
+
+</databaseChangeLog>
