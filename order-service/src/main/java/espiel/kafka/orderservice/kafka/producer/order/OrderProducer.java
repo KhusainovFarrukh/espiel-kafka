@@ -11,11 +11,12 @@ import java.time.ZoneId;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
-import org.springframework.kafka.requestreply.RequestReplyFuture;
+import org.springframework.kafka.requestreply.RequestReplyTypedMessageFuture;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -30,11 +31,12 @@ public class OrderProducer {
   private final SentMessageService sentMessageService;
 
   public void sendOnCreate(Long customerId) {
-    var producerRecord = new ProducerRecord<String, ActiveOrdersCountMessage>(
-        topicActiveOrdersCount,
-        new ActiveOrdersCountMessage(customerId, 1L)
-    );
-    var future = kafkaTemplate.sendAndReceive(producerRecord);
+    var message = MessageBuilder
+        .withPayload(new ActiveOrdersCountMessage(customerId, 1L))
+        .setHeader(KafkaHeaders.TOPIC, topicActiveOrdersCount)
+        .build();
+    RequestReplyTypedMessageFuture<String, ActiveOrdersCountMessage, String> future =
+        kafkaTemplate.sendAndReceive(message, ParameterizedTypeReference.forType(String.class));
 
     onMessageSent(future);
   }
@@ -50,18 +52,21 @@ public class OrderProducer {
           } else {
             activeOrdersCount = -1L;
           }
-          var producerRecord = new ProducerRecord<String, ActiveOrdersCountMessage>(
-              topicActiveOrdersCount,
-              new ActiveOrdersCountMessage(customerId, activeOrdersCount)
-          );
-          var future = kafkaTemplate.sendAndReceive(producerRecord);
+          var message = MessageBuilder
+              .withPayload(new ActiveOrdersCountMessage(customerId, activeOrdersCount))
+              .setHeader(KafkaHeaders.TOPIC, topicActiveOrdersCount)
+              .build();
+          RequestReplyTypedMessageFuture<String, ActiveOrdersCountMessage, String> future =
+              kafkaTemplate.sendAndReceive(
+                  message, ParameterizedTypeReference.forType(String.class)
+              );
 
           onMessageSent(future);
         });
   }
 
   private void onMessageSent(
-      RequestReplyFuture<String, ActiveOrdersCountMessage, String> future
+      RequestReplyTypedMessageFuture<String, ActiveOrdersCountMessage, String> future
   ) {
     future.getSendFuture().whenComplete((result, exception) -> Optional.ofNullable(exception)
         .ifPresentOrElse(
@@ -102,9 +107,10 @@ public class OrderProducer {
             () -> {
               log.info(
                   "Message consumed from topic {}: {}",
-                  topicActiveOrdersCount, reply.value()
+                  topicActiveOrdersCount, reply.getPayload()
               );
-              sentMessageService.updateStatus(reply.value(), SentMessageStatus.CONSUMED);
+              sentMessageService
+                  .updateStatus(reply.getPayload().toString(), SentMessageStatus.CONSUMED);
             }
         )
     );
