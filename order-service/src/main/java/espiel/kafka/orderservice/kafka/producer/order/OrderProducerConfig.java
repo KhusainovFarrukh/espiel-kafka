@@ -1,6 +1,7 @@
 package espiel.kafka.orderservice.kafka.producer.order;
 
 import espiel.kafka.orderservice.kafka.producer.order.model.ActiveOrdersCountMessage;
+import java.time.Duration;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -40,6 +41,9 @@ public class OrderProducerConfig {
   @Value("${kafka.producer.active-orders-count.replies-group-id}")
   private String repliesGroupId;
 
+  @Value("${kafka.producer.active-orders-count.replies-timeout-days}")
+  private Long repliesTimeoutDays;
+
   private static final String TYPE_KEY_ACTIVE_ORDERS_COUNT = "activeOrdersCount";
   public static final String SASL_MECHANISM_PLAIN = "PLAIN";
 
@@ -48,7 +52,9 @@ public class OrderProducerConfig {
       ProducerFactory<String, ActiveOrdersCountMessage> producerFactory,
       KafkaMessageListenerContainer<String, String> repliesContainer
   ) {
-    return new ReplyingKafkaTemplate<>(producerFactory, repliesContainer);
+    var replyingKafkaTemplate = new ReplyingKafkaTemplate<>(producerFactory, repliesContainer);
+    replyingKafkaTemplate.setDefaultReplyTimeout(Duration.ofDays(repliesTimeoutDays));
+    return replyingKafkaTemplate;
   }
 
   @Bean
