@@ -10,7 +10,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.listener.AbstractConsumerSeekAware;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,15 +29,17 @@ public class ActiveOrdersCountConsumer extends AbstractConsumerSeekAware {
       groupId = "${kafka.consumer.active-orders-count.group-id}"
   )
   @SendTo
-  public String consume(ConsumerRecord<String, ActiveOrdersCountMessage> message) {
+  public Message<String> consume(ConsumerRecord<String, ActiveOrdersCountMessage> message) {
     customerService.updateActiveOrdersCount(message.value());
-    return new String(message
-        .headers()
-        .headers(KafkaHeaders.CORRELATION_ID)
-        .iterator()
-        .next()
-        .value()
-    );
+    return MessageBuilder.withPayload(
+        new String(message
+            .headers()
+            .headers(KafkaHeaders.CORRELATION_ID)
+            .iterator()
+            .next()
+            .value()
+        )
+    ).build();
   }
 
   @Override
