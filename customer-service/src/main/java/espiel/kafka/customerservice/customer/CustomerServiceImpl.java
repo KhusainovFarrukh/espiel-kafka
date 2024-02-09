@@ -6,6 +6,8 @@ import espiel.kafka.customerservice.customer.model.CustomerResponseDTO;
 import espiel.kafka.customerservice.customer.model.CustomerUpdateRequestDTO;
 import espiel.kafka.customerservice.kafka.consumer.orderscount.model.ActiveOrdersCountMessage;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -65,6 +67,23 @@ public class CustomerServiceImpl implements CustomerService {
         customer.getActiveOrdersCount() + message.newOrdersCount().intValue()
     );
     customerRepository.save(customer);
+  }
+
+  @Override
+  public void updateActiveOrdersCounts(List<ActiveOrdersCountMessage> messages) {
+    var countsByCustomerId = messages.stream().collect(Collectors.groupingBy(
+        ActiveOrdersCountMessage::customerId,
+        Collectors.summingLong(ActiveOrdersCountMessage::newOrdersCount)
+    ));
+
+    var customers = customerRepository.findAllById(countsByCustomerId.keySet());
+
+    customers.forEach(customer -> {
+      var newCount = countsByCustomerId.get(customer.getId());
+      customer.setActiveOrdersCount(customer.getActiveOrdersCount() + newCount.intValue());
+    });
+
+    customerRepository.saveAll(customers);
   }
 
   private CustomerEntity findCustomer(Long id) {
