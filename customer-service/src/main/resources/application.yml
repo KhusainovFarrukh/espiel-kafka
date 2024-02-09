@@ -24,6 +24,6 @@ kafka:
       bootstrap-servers: ${KAFKA_IP:localhost}:${KAFKA_PORT:5092}
       topic: active-orders-count
       group-id: customer-service-gr1
-      consume-from-beginning: true
+      consume-from-beginning: false
       username: ${KAFKA_USERNAME:espiel_customer_service}
       password: ${KAFKA_PASSWORD:customer_service_psw}
