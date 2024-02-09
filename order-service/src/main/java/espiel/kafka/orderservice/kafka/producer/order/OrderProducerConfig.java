@@ -54,6 +54,7 @@ public class OrderProducerConfig {
   ) {
     var replyingKafkaTemplate = new ReplyingKafkaTemplate<>(producerFactory, repliesContainer);
     replyingKafkaTemplate.setDefaultReplyTimeout(Duration.ofDays(repliesTimeoutDays));
+    replyingKafkaTemplate.setBinaryCorrelation(false);
     return replyingKafkaTemplate;
   }
 
