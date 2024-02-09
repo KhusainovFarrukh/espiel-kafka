@@ -2,7 +2,6 @@ package espiel.kafka.customerservice.kafka.consumer.orderscount;
 
 import espiel.kafka.customerservice.customer.CustomerService;
 import espiel.kafka.customerservice.kafka.consumer.orderscount.model.ActiveOrdersCountMessage;
-import java.util.Arrays;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,8 +29,12 @@ public class ActiveOrdersCountConsumer extends AbstractConsumerSeekAware {
   @SendTo
   public String consume(ConsumerRecord<String, ActiveOrdersCountMessage> message) {
     customerService.updateActiveOrdersCount(message.value());
-    return Arrays.toString(
-        message.headers().headers(KafkaHeaders.CORRELATION_ID).iterator().next().value()
+    return new String(message
+        .headers()
+        .headers(KafkaHeaders.CORRELATION_ID)
+        .iterator()
+        .next()
+        .value()
     );
   }
 
