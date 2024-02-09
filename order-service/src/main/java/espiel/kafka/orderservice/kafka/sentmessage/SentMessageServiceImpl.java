@@ -13,7 +13,18 @@ public class SentMessageServiceImpl implements SentMessageService {
 
   @Override
   public void createSentMessage(SentMessageCreateDTO createDTO) {
-    sentMessageRepository.save(sentMessageMapper.toEntity(createDTO));
+    var sentMessage = sentMessageMapper.toEntity(createDTO);
+    sentMessage.setStatus(SentMessageStatus.SENT);
+    sentMessageRepository.save(sentMessage);
+  }
+
+  @Override
+  public void updateStatus(String correlationId, SentMessageStatus status) {
+    var sentMessage = sentMessageRepository
+        .findByCorrelationId(correlationId)
+        .orElseThrow(() -> new RuntimeException("Sent message not found"));
+    sentMessage.setStatus(status);
+    sentMessageRepository.save(sentMessage);
   }
 
 }

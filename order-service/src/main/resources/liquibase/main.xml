@@ -16,5 +16,6 @@
 
   <include file="liquibase/changelog/order/202402041509-create_table_orders.xml"/>
   <include file="/liquibase/changelog/sentmessage/202402082242-create_table_sent_messages.xml"/>
+  <include file="/liquibase/changelog/sentmessage/202402092349-add_columns_to_sent_messages.xml"/>
 
 </databaseChangeLog>

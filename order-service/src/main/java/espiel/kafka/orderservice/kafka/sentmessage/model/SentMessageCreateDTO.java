@@ -7,7 +7,8 @@ public record SentMessageCreateDTO(
     LocalDateTime timestamp,
     Long offset,
     Integer partition,
-    String message
+    String message,
+    String correlationId
 ) {
 
 }

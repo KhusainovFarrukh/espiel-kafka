@@ -2,6 +2,7 @@ package espiel.kafka.orderservice.kafka.producer.order;
 
 import espiel.kafka.orderservice.kafka.producer.order.model.ActiveOrdersCountMessage;
 import espiel.kafka.orderservice.kafka.sentmessage.SentMessageService;
+import espiel.kafka.orderservice.kafka.sentmessage.SentMessageStatus;
 import espiel.kafka.orderservice.kafka.sentmessage.model.SentMessageCreateDTO;
 import espiel.kafka.orderservice.order.OrderStatus;
 import java.time.Instant;
@@ -14,6 +15,7 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 import org.springframework.kafka.requestreply.RequestReplyFuture;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -76,7 +78,16 @@ public class OrderProducer {
                     ),
                     result.getRecordMetadata().offset(),
                     result.getRecordMetadata().partition(),
-                    result.getProducerRecord().value().toString()
+                    result.getProducerRecord().value().toString(),
+                    new String(
+                        result
+                            .getProducerRecord()
+                            .headers()
+                            .headers(KafkaHeaders.CORRELATION_ID)
+                            .iterator()
+                            .next()
+                            .value()
+                    )
                 )
             )
         )
@@ -88,10 +99,13 @@ public class OrderProducer {
                 "Error consuming message from topic {}: {}",
                 topicActiveOrdersCount, e.getMessage()
             ),
-            () -> log.info(
-                "Message consumed from topic {}: {}",
-                topicActiveOrdersCount, reply.value()
-            )
+            () -> {
+              log.info(
+                  "Message consumed from topic {}: {}",
+                  topicActiveOrdersCount, reply.value()
+              );
+              sentMessageService.updateStatus(reply.value(), SentMessageStatus.CONSUMED);
+            }
         )
     );
   }
