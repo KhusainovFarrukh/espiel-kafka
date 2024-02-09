@@ -11,9 +11,17 @@ public class OrderTopicConfig {
   @Value("${kafka.producer.active-orders-count.topic}")
   private String topicActiveOrdersCount;
 
+  @Value("${kafka.producer.active-orders-count.replies-topic}")
+  private String topicActiveOrdersCountReplies;
+
   @Bean
   public NewTopic orderTopic() {
     return new NewTopic(topicActiveOrdersCount, 1, (short) 1);
+  }
+
+  @Bean
+  public NewTopic orderRepliesTopic() {
+    return new NewTopic(topicActiveOrdersCountReplies, 1, (short) 1);
   }
 
 }

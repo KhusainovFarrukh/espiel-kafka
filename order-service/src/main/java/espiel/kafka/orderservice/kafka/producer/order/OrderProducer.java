@@ -8,12 +8,12 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
+import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
+import org.springframework.kafka.requestreply.RequestReplyFuture;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -24,14 +24,15 @@ public class OrderProducer {
   @Value("${kafka.producer.active-orders-count.topic}")
   private String topicActiveOrdersCount;
 
-  private final KafkaTemplate<String, ActiveOrdersCountMessage> kafkaTemplate;
+  private final ReplyingKafkaTemplate<String, ActiveOrdersCountMessage, String> kafkaTemplate;
   private final SentMessageService sentMessageService;
 
   public void sendOnCreate(Long customerId) {
-    var future = kafkaTemplate.send(
+    var producerRecord = new ProducerRecord<String, ActiveOrdersCountMessage>(
         topicActiveOrdersCount,
         new ActiveOrdersCountMessage(customerId, 1L)
     );
+    var future = kafkaTemplate.sendAndReceive(producerRecord);
 
     onMessageSent(future);
   }
@@ -47,19 +48,20 @@ public class OrderProducer {
           } else {
             activeOrdersCount = -1L;
           }
-          var future = kafkaTemplate.send(
+          var producerRecord = new ProducerRecord<String, ActiveOrdersCountMessage>(
               topicActiveOrdersCount,
               new ActiveOrdersCountMessage(customerId, activeOrdersCount)
           );
+          var future = kafkaTemplate.sendAndReceive(producerRecord);
 
           onMessageSent(future);
         });
   }
 
   private void onMessageSent(
-      CompletableFuture<SendResult<String, ActiveOrdersCountMessage>> future
+      RequestReplyFuture<String, ActiveOrdersCountMessage, String> future
   ) {
-    future.whenComplete((result, exception) -> Optional.ofNullable(exception)
+    future.getSendFuture().whenComplete((result, exception) -> Optional.ofNullable(exception)
         .ifPresentOrElse(
             e -> log.error(
                 "Error sending message to topic {}: {}",
@@ -77,7 +79,21 @@ public class OrderProducer {
                     result.getProducerRecord().value().toString()
                 )
             )
-        ));
+        )
+    );
+
+    future.whenComplete((reply, exception) -> Optional.ofNullable(exception)
+        .ifPresentOrElse(
+            e -> log.error(
+                "Error consuming message from topic {}: {}",
+                topicActiveOrdersCount, e.getMessage()
+            ),
+            () -> log.info(
+                "Message consumed from topic {}: {}",
+                topicActiveOrdersCount, reply.value()
+            )
+        )
+    );
   }
 
 }
