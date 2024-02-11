@@ -14,6 +14,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.listener.AbstractConsumerSeekAware;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
@@ -33,17 +34,12 @@ public class ActiveOrdersCountConsumer extends AbstractConsumerSeekAware {
       batch = "false"
   )
   @SendTo
-  public Message<String> consume(ConsumerRecord<String, ActiveOrdersCountMessage> message) {
-    customerService.updateActiveOrdersCount(message.value());
-    return MessageBuilder.withPayload(
-        new String(message
-            .headers()
-            .headers(KafkaHeaders.CORRELATION_ID)
-            .iterator()
-            .next()
-            .value()
-        )
-    ).build();
+  public Message<String> consume(
+      ActiveOrdersCountMessage message,
+      @Header(KafkaHeaders.CORRELATION_ID) String correlationId
+  ) {
+    customerService.updateActiveOrdersCount(message);
+    return MessageBuilder.withPayload(correlationId).build();
   }
 
   @KafkaListener(
