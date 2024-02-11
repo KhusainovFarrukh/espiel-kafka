@@ -63,6 +63,9 @@ public class SentMessageEntity {
   @Column(name = "status", nullable = false)
   private SentMessageStatus status;
 
+  @Column(name = "consumed_at")
+  private LocalDateTime consumedAt;
+
   @CreatedDate
   @Column(name = "created_at", nullable = false, updatable = false)
   private LocalDateTime createdAt;

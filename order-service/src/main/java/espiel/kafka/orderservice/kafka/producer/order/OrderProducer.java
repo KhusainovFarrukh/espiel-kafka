@@ -11,11 +11,13 @@ import java.time.ZoneId;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.header.Headers;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate;
 import org.springframework.kafka.requestreply.RequestReplyTypedMessageFuture;
 import org.springframework.kafka.support.KafkaHeaders;
+import org.springframework.messaging.MessageHeaders;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
@@ -84,14 +86,9 @@ public class OrderProducer {
                     result.getRecordMetadata().offset(),
                     result.getRecordMetadata().partition(),
                     result.getProducerRecord().value().toString(),
-                    new String(
-                        result
-                            .getProducerRecord()
-                            .headers()
-                            .headers(KafkaHeaders.CORRELATION_ID)
-                            .iterator()
-                            .next()
-                            .value()
+                    getHeaderAsString(
+                        result.getProducerRecord().headers(),
+                        KafkaHeaders.CORRELATION_ID
                     )
                 )
             )
@@ -105,15 +102,40 @@ public class OrderProducer {
                 topicActiveOrdersCount, e.getMessage()
             ),
             () -> {
+              var correlationId = getHeaderAsString(
+                  reply.getHeaders(),
+                  KafkaHeaders.CORRELATION_ID
+              );
               log.info(
                   "Message consumed from topic {}: {}",
-                  topicActiveOrdersCount, reply.getPayload()
+                  topicActiveOrdersCount, correlationId
               );
-              sentMessageService
-                  .updateStatus(reply.getPayload().toString(), SentMessageStatus.CONSUMED);
+              var consumedAt = LocalDateTime.parse(reply.getPayload().toString());
+              sentMessageService.updateStatus(
+                  correlationId, SentMessageStatus.CONSUMED, consumedAt
+              );
             }
         )
     );
+  }
+
+  private static String getHeaderAsString(
+      Headers headers,
+      String headerName
+  ) {
+    return new String(headers
+        .headers(headerName)
+        .iterator()
+        .next()
+        .value()
+    );
+  }
+
+  private static String getHeaderAsString(
+      MessageHeaders headers,
+      String headerName
+  ) {
+    return headers.get(headerName, String.class);
   }
 
 }

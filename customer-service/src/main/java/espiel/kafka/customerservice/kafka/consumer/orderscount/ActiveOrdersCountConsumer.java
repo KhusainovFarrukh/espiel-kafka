@@ -2,6 +2,7 @@ package espiel.kafka.customerservice.kafka.consumer.orderscount;
 
 import espiel.kafka.customerservice.customer.CustomerService;
 import espiel.kafka.customerservice.kafka.consumer.orderscount.model.ActiveOrdersCountMessage;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public class ActiveOrdersCountConsumer extends AbstractConsumerSeekAware {
           var replyTopic = getHeaderAsString(message.headers(), KafkaHeaders.REPLY_TOPIC);
 
           return MessageBuilder
-              .withPayload(correlationId)
+              .withPayload(LocalDateTime.now().toString())
               .setHeader(KafkaHeaders.TOPIC, replyTopic)
               .setHeader(KafkaHeaders.CORRELATION_ID, correlationId)
               .build();
