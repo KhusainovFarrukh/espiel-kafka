@@ -110,9 +110,10 @@ public class OrderProducer {
                   "Message consumed from topic {}: {}",
                   topicActiveOrdersCount, correlationId
               );
-              var payload = LocalDateTime.parse(reply.getPayload().toString());
-              log.info("Message consumed at: {}", payload);
-              sentMessageService.updateStatus(correlationId, SentMessageStatus.CONSUMED);
+              var consumedAt = LocalDateTime.parse(reply.getPayload().toString());
+              sentMessageService.updateStatus(
+                  correlationId, SentMessageStatus.CONSUMED, consumedAt
+              );
             }
         )
     );
