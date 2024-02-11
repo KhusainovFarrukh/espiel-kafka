@@ -29,7 +29,27 @@ public class ActiveOrdersCountConsumer extends AbstractConsumerSeekAware {
 
   @KafkaListener(
       topics = "${kafka.consumer.active-orders-count.topic}",
-      groupId = "${kafka.consumer.active-orders-count.group-id}"
+      groupId = "${kafka.consumer.active-orders-count.group-id}",
+      batch = "false"
+  )
+  @SendTo
+  public Message<String> consume(ConsumerRecord<String, ActiveOrdersCountMessage> message) {
+    customerService.updateActiveOrdersCount(message.value());
+    return MessageBuilder.withPayload(
+        new String(message
+            .headers()
+            .headers(KafkaHeaders.CORRELATION_ID)
+            .iterator()
+            .next()
+            .value()
+        )
+    ).build();
+  }
+
+  @KafkaListener(
+      topics = "${kafka.consumer.active-orders-count.topic}",
+      groupId = "${kafka.consumer.active-orders-count.group-id}",
+      batch = "true"
   )
   @SendTo
   public Collection<Message<String>> consume(
