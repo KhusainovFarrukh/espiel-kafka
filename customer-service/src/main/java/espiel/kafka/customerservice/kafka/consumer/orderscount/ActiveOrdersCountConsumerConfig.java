@@ -43,6 +43,7 @@ public class ActiveOrdersCountConsumerConfig {
     var factory = new ConcurrentKafkaListenerContainerFactory<String, ActiveOrdersCountMessage>();
     factory.setConsumerFactory(consumerFactory());
     factory.setReplyTemplate(replyKafkaTemplate);
+    factory.setBatchListener(true);
     return factory;
   }
 

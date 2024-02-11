@@ -2,10 +2,13 @@ package espiel.kafka.customerservice.kafka.consumer.orderscount;
 
 import espiel.kafka.customerservice.customer.CustomerService;
 import espiel.kafka.customerservice.kafka.consumer.orderscount.model.ActiveOrdersCountMessage;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Headers;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.listener.AbstractConsumerSeekAware;
@@ -29,17 +32,25 @@ public class ActiveOrdersCountConsumer extends AbstractConsumerSeekAware {
       groupId = "${kafka.consumer.active-orders-count.group-id}"
   )
   @SendTo
-  public Message<String> consume(ConsumerRecord<String, ActiveOrdersCountMessage> message) {
-    customerService.updateActiveOrdersCount(message.value());
-    return MessageBuilder.withPayload(
-        new String(message
-            .headers()
-            .headers(KafkaHeaders.CORRELATION_ID)
-            .iterator()
-            .next()
-            .value()
-        )
-    ).build();
+  public Collection<Message<String>> consume(
+      List<ConsumerRecord<String, ActiveOrdersCountMessage>> messages
+  ) {
+    customerService.updateActiveOrdersCounts(
+        messages.stream().map(ConsumerRecord::value).toList()
+    );
+
+    return messages.stream()
+        .map(message -> {
+          var correlationId = getHeaderAsString(message.headers(), KafkaHeaders.CORRELATION_ID);
+          var replyTopic = getHeaderAsString(message.headers(), KafkaHeaders.REPLY_TOPIC);
+
+          return MessageBuilder
+              .withPayload(correlationId)
+              .setHeader(KafkaHeaders.TOPIC, replyTopic)
+              .setHeader(KafkaHeaders.CORRELATION_ID, correlationId)
+              .build();
+        })
+        .toList();
   }
 
   @Override
@@ -51,6 +62,19 @@ public class ActiveOrdersCountConsumer extends AbstractConsumerSeekAware {
     if (Boolean.TRUE.equals(consumeFromBeginning)) {
       seekToBeginning();
     }
+  }
+
+  private static String getHeaderAsString(
+      Headers headers,
+      String headerName
+  ) {
+    return new String(
+        headers
+            .headers(headerName)
+            .iterator()
+            .next()
+            .value()
+    );
   }
 
 }
