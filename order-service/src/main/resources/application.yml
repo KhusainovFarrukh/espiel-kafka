@@ -38,5 +38,3 @@ kafka:
       replies-topic: active-orders-count-replies
       replies-group-id: order-service-gr1
       replies-timeout-days: 1
-      username: ${KAFKA_USERNAME:espiel_order_service}
-      password: ${KAFKA_PASSWORD:order_service_psw}

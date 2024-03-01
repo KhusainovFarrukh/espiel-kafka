@@ -25,5 +25,3 @@ kafka:
       topic: active-orders-count
       group-id: customer-service-gr1
       consume-from-beginning: false
-      username: ${KAFKA_USERNAME:espiel_customer_service}
-      password: ${KAFKA_PASSWORD:customer_service_psw}
