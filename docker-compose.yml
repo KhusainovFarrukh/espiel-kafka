@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # Kafka
-  kafka:
-    container_name: kafka
+  # Kafka (broker+controller)
+  kafka-1:
+    container_name: kafka-1
     image: bitnami/kafka:3.6.1
     ports:
       - 5092:5092
@@ -11,14 +11,88 @@ services:
     environment:
       KAFKA_CFG_NODE_ID: 1
       KAFKA_CFG_BROKER_ID: 1
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:5094
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:5094,3@kafka-3:5094
       KAFKA_CFG_LISTENERS: CONTROLLER://:5094,INTERNAL://:5093,EXTERNAL://:5092
-      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:5093,EXTERNAL://localhost:5092
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka-1:5093,EXTERNAL://localhost:5092
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_CFG_PROCESS_ROLES: broker,controller
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_KRAFT_CLUSTER_ID: abcdefghijklmnopqrstuv
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    networks:
+      - espiel-kafka
+
+  # Kafka (broker)
+  kafka-2:
+    container_name: kafka-2
+    image: bitnami/kafka:3.6.1
+    ports:
+      - 5094:5092
+      - 5095:5093
+    environment:
+      KAFKA_CFG_NODE_ID: 2
+      KAFKA_CFG_BROKER_ID: 2
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:5094,3@kafka-3:5094
+      KAFKA_CFG_LISTENERS: INTERNAL://:5093,EXTERNAL://:5092
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka-2:5093,EXTERNAL://localhost:5092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_PROCESS_ROLES: broker
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_KRAFT_CLUSTER_ID: abcdefghijklmnopqrstuv
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 2
+    networks:
+      - espiel-kafka
+
+  # Kafka (controller)
+  kafka-3:
+    container_name: kafka-3
+    image: bitnami/kafka:3.6.1
+    ports:
+      - 5096:5092
+      - 5097:5093
+    environment:
+      KAFKA_CFG_NODE_ID: 3
+      KAFKA_CFG_BROKER_ID: 3
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:5094,3@kafka-3:5094
+      KAFKA_CFG_LISTENERS: CONTROLLER://:5094
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_PROCESS_ROLES: controller
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_KRAFT_CLUSTER_ID: abcdefghijklmnopqrstuv
+    networks:
+      - espiel-kafka
+
+  # Kafka (broker)
+  kafka-4:
+    container_name: kafka-4
+    image: bitnami/kafka:3.6.1
+    ports:
+      - 5098:5092
+      - 5099:5093
+    environment:
+      KAFKA_CFG_NODE_ID: 4
+      KAFKA_CFG_BROKER_ID: 4
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:5094,3@kafka-3:5094
+      KAFKA_CFG_LISTENERS: INTERNAL://:5093,EXTERNAL://:5092
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka-4:5093,EXTERNAL://localhost:5092
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_PROCESS_ROLES: broker
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_KRAFT_CLUSTER_ID: abcdefghijklmnopqrstuv
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 2
     networks:
       - espiel-kafka
 
@@ -30,7 +104,7 @@ services:
       - 9090:8080
     environment:
       KAFKA_CLUSTERS_0_NAME: espiel-kafka
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:5093
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:5093
       KAFKA_CLUSTERS_0_PROPERTIES_SECURITY_PROTOCOL: PLAINTEXT
     networks:
       - espiel-kafka
@@ -78,7 +152,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       DB_DRIVER: org.postgresql.Driver
-      KAFKA_IP: kafka
+      KAFKA_IP: kafka-1
       KAFKA_PORT: 5093
       KAFKA_USERNAME: espiel_customer_service
       KAFKA_PASSWORD: customer_service_psw
@@ -103,7 +177,7 @@ services:
       DB_USERNAME: postgres
       DB_PASSWORD: postgres
       DB_DRIVER: org.postgresql.Driver
-      KAFKA_IP: kafka
+      KAFKA_IP: kafka-1
       KAFKA_PORT: 5093
       KAFKA_USERNAME: espiel_order_service
       KAFKA_PASSWORD: order_service_psw
