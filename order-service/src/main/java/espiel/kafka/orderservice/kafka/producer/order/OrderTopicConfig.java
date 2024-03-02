@@ -16,12 +16,12 @@ public class OrderTopicConfig {
 
   @Bean
   public NewTopic orderTopic() {
-    return new NewTopic(topicActiveOrdersCount, 1, (short) 1);
+    return new NewTopic(topicActiveOrdersCount, 5, (short) 3);
   }
 
   @Bean
   public NewTopic orderRepliesTopic() {
-    return new NewTopic(topicActiveOrdersCountReplies, 1, (short) 1);
+    return new NewTopic(topicActiveOrdersCountReplies, 5, (short) 3);
   }
 
 }
